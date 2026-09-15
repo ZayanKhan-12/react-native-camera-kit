@@ -140,7 +140,7 @@ export interface CameraProps extends ViewProps {
    * without replacing the camera's own gesture handling.
    *
    * Coordinates are normalized 0-1 in preview space, matching `onFaceDetected`.
-   * Requires `focusMode="on"` (the default), since that is when the
+   * On iOS, requires `focusMode="on"` (the default), since that is when the
    * tap-to-focus gesture is active.
    *
    * Note this is deliberately not called `onFocus`: `ViewProps` already
