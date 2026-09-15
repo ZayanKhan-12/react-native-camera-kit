@@ -54,8 +54,8 @@ function isFacingCamera(face: FaceData): boolean {
 
 function CaptureButton({ onPress, children }: { onPress: () => void; children?: React.ReactNode }) {
   const w = 80;
-  const brdW = 4;
-  const spc = 6;
+  const brdW = 3.5;
+  const spc = 2.5;
   const cInner = 'white';
   const cOuter = 'white';
   return (
@@ -354,6 +354,11 @@ const CameraExample = ({ onBack, stress }: { onBack: () => void; stress?: boolea
             onZoom={(e) => {
               console.log('zoom', e.nativeEvent.zoom);
               setZoom(e.nativeEvent.zoom);
+            }}
+            onTapToFocus={(e) => {
+              // Fires alongside the camera's own tap-to-focus, so an overlay can
+              // react to the tap without suppressing focus and zoom
+              console.log('tapToFocus', e.nativeEvent.x, e.nativeEvent.y);
             }}
             torchMode={torchMode ? 'on' : 'off'}
             shutterPhotoSound

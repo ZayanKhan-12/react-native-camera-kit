@@ -7,7 +7,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "version": "18.0.0",
+  "version": "18.0.1",
   "description": "A high performance, fully featured, rock solid camera library for React Native applications",
   "nativePackage": true,
   "scripts": {
@@ -16,9 +16,9 @@
     "test": "jest",
     "lint": "yarn eslint -c .eslintrc.js",
     "check-ios": "scripts/check-ios.sh",
-    "release": "yarn clean && yarn build && yarn publish --verbose",
-    "release:beta": "yarn clean && yarn build && yarn publish --tag beta --verbose",
-    "release:local": "yarn clean && yarn build && tmp=$(mktemp) && yarn pack --filename $tmp.tar.gz && open -R $tmp.tar.gz",
+    "release": "yarn clean && yarn build && yarn version && npm publish --verbose",
+    "release:beta": "yarn clean && yarn build && yarn version && npm publish --tag beta --verbose",
+    "release:local": "yarn clean && yarn build && tgz=$(npm pack --silent) && open -R \"$PWD/$tgz\"",
     "prepack": "rm -rf android/build build",
     "start": "watchman watch-del-all && node node_modules/react-native/local-cli/cli.js start",
     "codegen": "react-native codegen --verbose --path . --platform ios --source library && react-native codegen --verbose --path . --platform android --source library",
@@ -33,9 +33,19 @@
   "files": [
     "android",
     "!android/build",
+    "!android/.idea",
+    "!android/local.properties",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
     "dist",
     "ios",
+    "!ios/**/xcuserdata",
+    "!ios/**/*.xcuserstate",
     "src",
+    "!src/**/__tests__",
+    "!src/**/*.test.*",
+    "!src/**/*.spec.*",
     "ReactNativeCameraKit.podspec"
   ],
   "license": "MIT",
