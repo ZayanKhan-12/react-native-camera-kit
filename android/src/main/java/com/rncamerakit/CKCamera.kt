@@ -269,12 +269,20 @@ class CKCamera(context: ThemedReactContext) : FrameLayout(context), LifecycleObs
             })
 
             // Tap to focus
+            var isMultiTouchGesture = false
             viewFinder.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    isMultiTouchGesture = false
+                } else if (event.pointerCount > 1) {
+                    isMultiTouchGesture = true
+                }
                 if (event.action != MotionEvent.ACTION_UP) {
                     return@setOnTouchListener scaleDetector.onTouchEvent(event)
                 }
                 focusOnPoint(event.x, event.y)
-                onTapToFocus(event.x, event.y)
+                if (!isMultiTouchGesture) {
+                    onTapToFocus(event.x, event.y)
+                }
                 return@setOnTouchListener true
             }
 
