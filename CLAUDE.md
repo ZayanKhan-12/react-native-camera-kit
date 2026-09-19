@@ -97,6 +97,60 @@ DYLD_FRAMEWORK_PATH=/Library/Developer/CommandLineTools/usr/lib swiftlint -- <fi
 before you touch it. Diff the violations before and after your change rather than reading the
 raw count.
 
+### Testing iOS view code without a device
+
+There is no Swift test target, so UIKit view logic is easy to change blind. Files that need only
+UIKit build for **Mac Catalyst**, which runs natively on an Apple Silicon Mac, so a view can be
+laid out, rendered and asserted on from a plain command-line binary:
+
+```sh
+SDK=$(xcrun --sdk macosx --show-sdk-path)
+swiftc -o /tmp/render -sdk "$SDK" -target arm64-apple-ios15.0-macabi \
+  -I "$SDK/System/iOSSupport/usr/lib/swift" -L "$SDK/System/iOSSupport/usr/lib/swift" \
+  -Fsystem "$SDK/System/iOSSupport/System/Library/Frameworks" \
+  ios/ReactNativeCameraKit/RatioOverlayView.swift main.swift
+```
+
+`main.swift` can add the view to a container, call `layoutIfNeeded()`, render it through
+`UIGraphicsImageRenderer` and read the pixels back — which is how the `ratioOverlay` geometry is
+checked against the ratio it was asked for. Top-level statements only run from a file literally
+named `main.swift`.
+
+For pure geometry, extracting the struct with `awk '/^struct X/,/^}$/'` and compiling it against
+`CoreGraphics` alone keeps the test honest: it exercises the shipped source rather than a copy
+that can drift.
+
+This only works for views that need nothing beyond UIKit. Anything touching `React` headers or
+`AVCaptureSession` has to go through the example app.
+
+### Building the iOS example locally
+
+`yarn bootstrap` runs `bundle install` first, and the pinned `bundler 2.1.4` aborts on modern Ruby
+with `uninitialized constant DidYouMean::SPELL_CHECKERS` (CI pins Ruby 2.7.4). Because the script
+is `&&`-chained, that failure silently skips `yarn` in `example/`, and the library is then missing
+from `example/node_modules` — so autolinking drops it and `ReactNativeCameraKit` never appears in
+`Podfile.lock`. A build that looks green is then not compiling this library at all. Check for it:
+
+```sh
+grep -c ReactNativeCameraKit example/ios/Podfile.lock   # must be > 0
+```
+
+Sidestep bundler entirely:
+
+```sh
+brew install cocoapods
+cd example && yarn && cd ios && pod install
+```
+
+On Xcode 26 the vendored `fmt` pod fails with `call to consteval function ... is not a constant
+expression`. It is a React Native dependency, unrelated to any change here; force the detection
+off in `example/ios/Pods/fmt/include/fmt/base.h` (Pods is gitignored) to get past it:
+
+```
+#if 1   // was: #if !defined(__cpp_lib_is_constant_evaluated)
+#  define FMT_USE_CONSTEVAL 0
+```
+
 ## Conventions
 
 - Keep the two `CKCameraManager.kt` files symmetrical. A registration added to one and not the
