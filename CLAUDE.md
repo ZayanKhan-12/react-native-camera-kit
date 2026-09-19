@@ -159,5 +159,19 @@ off in `example/ios/Pods/fmt/include/fmt/base.h` (Pods is gitignored) to get pas
   and `onTapToFocus` do, so payloads don't depend on device pixel dimensions.
 - Put geometry conversions in the view that owns the coordinate space, not in `CameraView.swift`
   — it is already long enough to trip the linter.
+- **Never assign to `props`.** React 19 freezes `element.props` in its development build, and
+  `@react-native/babel-preset` emits no `"use strict"`, so `props.x = ...` is silently discarded
+  in debug and applied in release — a default that works in the store build and not on your
+  simulator. Spread onto a new object instead. A quick check on the compiled output:
+
+  ```sh
+  node -e "const b=require('@babel/core');for(const f of ['src/Camera.ios.tsx','src/Camera.android.tsx'])\
+  console.log(f,(b.transformFileSync(f).code.match(/\bprops\.[A-Za-z_\$][\w\$]*\s*=(?!=)/g)||[]).length)"
+  ```
+
+- A JS-side default only matters when the codegen spec does not already carry it. Check
+  `CameraNativeComponent.ts` first: `WithDefault<Int32, -1>` means Fabric supplies `-1` on its
+  own, whereas a bare `boolean` defaults to `false` and needs the default set in JS.
+
 - Prop docs are TSDoc on `CameraProps.ts` with a short usage example, mirrored as a row in the
   README table. Platform-specific props say so in the first sentence.
